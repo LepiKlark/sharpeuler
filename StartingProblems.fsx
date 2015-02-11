@@ -49,6 +49,16 @@
                 cache.[key] <- ret
                 ret
 
+    let divisors n =
+        let upper = n |> float |> sqrt |> int
+        if upper * upper = n then
+            seq { 
+                yield 1; 
+                if upper <> 1 then yield upper; 
+                for x in 2..(upper-1) do if n % x = 0 then yield x; yield (n/x) }
+        else
+            seq { yield 1; for x in 2..upper do if n % x = 0 then yield x; yield (n/x) }
+        
 module ``problem 1`` =
     [1..999] |> List.filter (fun n -> n % 3 = 0 || n % 5 = 0) |> List.sum
 
@@ -260,5 +270,28 @@ module ``problem 19`` =
 module ``problem 20`` =
     open Utility
     factbig (bigint 100) |> string |> Seq.map string |> Seq.map System.Int32.Parse |> Seq.sum
+
 module ``problem 21`` =
+    open Utility
+    let d x = divisors x |> Seq.sum
+    let isAmicable x = d(d x) = x && d x <> x
     
+    [1..9999] |> List.filter isAmicable |> List.sum
+
+module ``problem 22`` =
+    let fp = @"C:\Users\Aleksandar\Desktop\p022_names.txt"
+    let input = 
+        System.IO.File.ReadAllText(fp).Split(',') 
+        |> Array.map (fun s -> s.Trim('"'))
+        |> Array.sort
+    let worth (s : string) = s |> Seq.map (fun c -> int c - int 'A' + 1) |> Seq.sum
+    input |> Array.mapi (fun i s -> (i + 1) * worth s) |> Array.sum
+
+module ``problem 23`` =
+    open Utility
+    let isAbundant x = (divisors x |> Seq.sum) > x
+    let limit = 28123
+    let abundant = [1..limit] |> List.filter isAbundant |> List.toArray
+    let sums = [|for a in abundant do for b in abundant do yield a + b|]
+    ([1..limit] |> Set.ofList) - (sums |> Set.ofArray)
+    |> Set.toArray |> Array.sum
