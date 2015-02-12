@@ -242,3 +242,22 @@ module ``problem 23`` =
     let abundant = [|1..limit|] |> Array.filter isAbundant
     let sums = seq { for a in abundant do for b in abundant do if a + b <= limit then yield a + b } |> Seq.distinct
     (limit * (limit + 1) / 2) - (sums|> Seq.sum)
+
+module ``problem 25`` =
+    let fibonacci = Seq.unfold (fun (a,b) -> Some((a + b, (b, a + b)))) (bigint 0, bigint 1)
+    let cntdigits (n : bigint) = n |> string |> Seq.length
+    (fibonacci |> Seq.findIndex (fun n -> cntdigits n = 1000)) + 2
+    
+module ``problem 26`` =
+    let rec div nominator denominator rs =
+        let r = nominator % denominator
+        if r = 0 then 0
+        elif List.exists ((=) r) rs then 1 + List.findIndex ((=) r) (rs)
+        else div (r * 10) denominator (r::rs)
+    [1..999] |> List.maxBy (fun n -> div 1 n [])
+
+module ``problem 27`` =
+    open Utility
+    let exists n1 n2 p1 p2 = (p2 - n2 * n2 - p1 + n1 * n1) % (n2 - n1)
+    let primes = [1L..100000L] |> List.filter isPrime
+    primes |> Seq.length
