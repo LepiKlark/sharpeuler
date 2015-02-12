@@ -18,6 +18,9 @@
             bigint.One
         else
             n * factbig(n-bigint.One)
+    let rec factgen n = 
+        if n = LanguagePrimitives.GenericOne || n = LanguagePrimitives.GenericZero then LanguagePrimitives.GenericOne
+        else n * factgen (n - LanguagePrimitives.GenericOne)
     let combination n m = fact(n) / (fact(n - m) * fact(m))
     let rec comb n l =
         match (n,l) with
@@ -108,8 +111,7 @@ module ``problem 10`` =
     [2L..2000000L] |> List.filter isPrime |> List.sum
 
 module ``problem 11`` =
-    let grid =
-     """..."""
+    let grid = """..."""
     let parsed = grid.Split(' ') |> Array.map System.Int32.Parse
     let matrix = Array2D.init 20 20 (fun x y -> parsed.[x * 20 + y])
 
@@ -242,3 +244,43 @@ module ``problem 23`` =
     let abundant = [|1..limit|] |> Array.filter isAbundant
     let sums = seq { for a in abundant do for b in abundant do if a + b <= limit then yield a + b } |> Seq.distinct
     (limit * (limit + 1) / 2) - (sums|> Seq.sum)
+
+module ``problem 24`` =
+    open Utility
+
+    let rec distribute e = function
+    | [] -> [[e]]
+    | x::xs' as xs -> (e::xs)::[for xs in distribute e xs' -> x::xs]
+
+    let rec permute = function
+    | [] -> [[]]
+    | e::xs -> List.collect (distribute e) (permute xs)
+
+    let remove pos lst =
+        let rec removei curr = function
+        | [] -> []
+        | e::tail when curr = pos -> removei (curr + 1) tail
+        | e::tail -> e::removei (curr + 1) tail
+        removei 0 lst
+
+    let rec get_perm n (collection : list<'a>) =
+        let len = collection |> Seq.length |> int64
+        let f = fact(len - 1L)
+        if n <> 0L then
+            let pos = n / f |> int
+            let elem = collection.[pos]
+            let rest = remove pos collection 
+            elem::(get_perm (n - (f * int64 pos)) rest)
+        else collection
+
+    get_perm 0L [0;1;2]
+    get_perm 1L [0;1;2]
+    get_perm 2L [0;1;2]
+    get_perm 3L [0;1;2]
+    get_perm 4L [0;1;2]
+    get_perm 5L [0;1;2]
+
+    get_perm 999999L [0..9] |> List.iter (printf  "%A")
+
+    [1..10].[3]
+    List.
