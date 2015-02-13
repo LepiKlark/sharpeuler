@@ -62,6 +62,14 @@
         else
             seq { yield 1; for x in 2..upper do if n % x = 0 then yield x; yield (n/x) }
         
+    let rec distribute e = function
+    | [] -> [[e]]
+    | x::xs' as xs -> (e::xs)::[for xs in distribute e xs' -> x::xs]
+
+    let rec permute = function
+    | [] -> [[]]
+    | e::xs -> List.collect (distribute e) (permute xs)
+
 module ``problem 1`` =
     [1..999] |> List.filter (fun n -> n % 3 = 0 || n % 5 = 0) |> List.sum
 
@@ -248,14 +256,6 @@ module ``problem 23`` =
 module ``problem 24`` =
     open Utility
 
-    let rec distribute e = function
-    | [] -> [[e]]
-    | x::xs' as xs -> (e::xs)::[for xs in distribute e xs' -> x::xs]
-
-    let rec permute = function
-    | [] -> [[]]
-    | e::xs -> List.collect (distribute e) (permute xs)
-
     let remove pos lst =
         let rec removei curr = function
         | [] -> []
@@ -290,6 +290,26 @@ module ``problem 26`` =
 
 module ``problem 27`` =
     open Utility
-    let exists n1 n2 p1 p2 = (p2 - n2 * n2 - p1 + n1 * n1) % (n2 - n1)
-    let primes = [1L..100000L] |> List.filter isPrime
-    primes |> Seq.length
+
+    let f a b n = 
+        let r = n * n + a * n + b 
+        r > 0L && isPrime r
+    let bcands = [1L..1000L] |> List.filter isPrime
+    [ for a in [-1000L..1000L] do
+        for b in bcands do
+            yield a, b, (seq { 0L.. 100L } |> Seq.takeWhile (fun n -> f a b n) |> Seq.length) ] 
+    |> List.maxBy (fun (_, _, v) -> v) |> fun (a, b, _) -> a * b
+
+module ``problem 28`` =
+    let sumdiag n = -3 + (Seq.init 4 (fun j -> Seq.init n (fun i -> pown (1 + i * 2) 2 - i * 2 * j)) |> Seq.collect id |> Seq.sum)
+    sumdiag 501
+
+module ``problem 29`` =
+    [for a in 2..100 do for b in 2..100 do yield bigint.Pow ((bigint a),b) ] |> Seq.distinct |> Seq.length
+
+module ``problem 30`` =
+    let f n = n |> string |> Seq.map (fun c -> int c - int '0') |> Seq.map (fun i -> pown i 5) |> Seq.sum
+    ([1..500000] |> List.filter (fun n -> f n = n) |> List.sum) - 1
+
+module ``problem 31`` =
+    
