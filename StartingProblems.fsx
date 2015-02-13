@@ -273,14 +273,23 @@ module ``problem 24`` =
             elem::(get_perm (n - (f * int64 pos)) rest)
         else collection
 
-    get_perm 0L [0;1;2]
-    get_perm 1L [0;1;2]
-    get_perm 2L [0;1;2]
-    get_perm 3L [0;1;2]
-    get_perm 4L [0;1;2]
-    get_perm 5L [0;1;2]
-
     get_perm 999999L [0..9] |> List.iter (printf  "%A")
 
-    [1..10].[3]
-    List.
+module ``problem 25`` =
+    let fibonacci = Seq.unfold (fun (a,b) -> Some((a + b, (b, a + b)))) (bigint 0, bigint 1)
+    let cntdigits (n : bigint) = n |> string |> Seq.length
+    (fibonacci |> Seq.findIndex (fun n -> cntdigits n = 1000)) + 2
+    
+module ``problem 26`` =
+    let rec div nominator denominator rs =
+        let r = nominator % denominator
+        if r = 0 then 0
+        elif List.exists ((=) r) rs then 1 + List.findIndex ((=) r) (rs)
+        else div (r * 10) denominator (r::rs)
+    [1..999] |> List.maxBy (fun n -> div 1 n [])
+
+module ``problem 27`` =
+    open Utility
+    let exists n1 n2 p1 p2 = (p2 - n2 * n2 - p1 + n1 * n1) % (n2 - n1)
+    let primes = [1L..100000L] |> List.filter isPrime
+    primes |> Seq.length
