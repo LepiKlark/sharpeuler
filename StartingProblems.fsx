@@ -70,6 +70,8 @@
     | [] -> [[]]
     | e::xs -> List.collect (distribute e) (permute xs)
 
+    let digits x = x |> string |> Seq.map (fun c -> int c - int '0')
+
 module ``problem 1`` =
     [1..999] |> List.filter (fun n -> n % 3 = 0 || n % 5 = 0) |> List.sum
 
@@ -347,3 +349,31 @@ module ``problem 33`` =
         else false
 
     [ for a in 10..99 do for b in (a+1)..99 do if check a b then yield a, b ]
+
+module ``problem 34`` =
+    open Utility
+
+    let sumdigitfact n = n |> string |> Seq.map (fun c -> int64 c - int64 '0') |> Seq.map fact |> Seq.sum
+    [3L..50000L] |> List.filter (fun c -> c = sumdigitfact c) |> List.sum
+
+module ``problem 35`` =
+    open Utility
+    let primes = [1L..1000000L] |> List.filter isPrime |> List.map int
+    let primeSet = primes |> Set.ofList
+
+    let rec listRotations list =
+        seq {
+            match list with
+            | [] -> ()
+            | h::t -> yield list; yield! listRotations (t@[h])
+        }
+
+    let num_len n = (int << log10 << float <| n) + 1
+    let numRotations n =
+        let t = n |> digits |> Seq.toList |> listRotations |> Seq.take (num_len n)
+        t |> Seq.map (fun cs -> cs |> Seq.map string |> Seq.reduce (+) |> System.Int32.Parse)
+    
+    let ForAll f s = Seq.exists (f >> not) s |> not
+
+    [ for p in primes do
+        if numRotations p |> ForAll (fun e -> Set.contains e primeSet) then yield p ] |> List.length
