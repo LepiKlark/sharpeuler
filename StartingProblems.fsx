@@ -312,4 +312,38 @@ module ``problem 30`` =
     ([1..500000] |> List.filter (fun n -> f n = n) |> List.sum) - 1
 
 module ``problem 31`` =
+    open Utility
+    let rec split lst = [
+        match lst with
+        | [] -> ()
+        | h::t as xs -> yield h,xs; yield! split t ]
     
+    let memo = (memo ()) id
+    let rec count (sum, coins) =
+        if sum = 200 then 1
+        elif sum > 200 then 0
+        else split coins |> List.map (fun (c, rest) -> memo count (sum + c, rest)) |> List.sum
+    count (0,[1; 2; 5; 10; 20; 50; 100; 200])
+
+module ``problem 32`` =
+    let check x y =
+        let res = string x + string y + string (x * y)
+        Seq.length res = 9 && Seq.distinct res |> Seq.length = 9 && (Seq.min res) > '0'
+
+    [ for x in 1..3000 do
+        for y in x..3000 do
+            if check x y then yield x * y ] |> Seq.distinct |> Seq.sum
+
+module ``problem 33`` =
+    let check a b =
+        let an, ad = a / 10, a % 10
+        let bn, bd = b / 10, b % 10
+        let f a b = float a / float b
+        if an = 0 || ad = 0 || bn = 0 || bd = 0 then false
+        elif an=bn then f ad bd=f a b
+        elif an=bd then f ad bn=f a b
+        elif ad=bn then f an bd=f a b
+        elif ad=bd then f an bn=f a b
+        else false
+
+    [ for a in 10..99 do for b in (a+1)..99 do if check a b then yield a, b ]
