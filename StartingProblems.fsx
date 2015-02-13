@@ -366,7 +366,7 @@ module ``problem 35`` =
             match list with
             | [] -> ()
             | h::t -> yield list; yield! listRotations (t@[h])
-        }
+        } // List.permute is better choice here.
 
     let num_len n = (int << log10 << float <| n) + 1
     let numRotations n =
