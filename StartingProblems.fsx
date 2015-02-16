@@ -377,3 +377,57 @@ module ``problem 35`` =
 
     [ for p in primes do
         if numRotations p |> ForAll (fun e -> Set.contains e primeSet) then yield p ] |> List.length
+
+module ``problem 36`` =
+    let rec toBinary = function
+    | 0 -> []
+    | x -> (x &&& 1) :: toBinary (x >>> 1)
+
+    let rec toDec = function
+    | 0 -> []
+    | x -> (x % 10) :: toDec (x / 10)
+
+    let check x = toDec x = List.rev (toDec x) && toBinary x = List.rev (toBinary x)     
+    [1..999999] |> List.filter check |> List.sum
+
+module ``problem 37`` =
+    open Utility
+
+    let truncL (x : int) = x % (pown 10 (int(log10 (float x))))
+    let truncLSeq = Seq.unfold(fun s -> if s <> 0 then Some (s, truncL s) else None)
+    let isTruncLPrime (n : int64) = n |> int |> truncLSeq |> Seq.map int64 |> Seq.forall isPrime
+
+    let rec buildPrimes (curr : int64) =
+        let cands = [1L..2L..9L] |> List.map (fun i -> curr * 10L + i) |> List.filter isPrime
+        let truncPrimes = cands |> List.filter isTruncLPrime
+        match cands with
+        | [] -> []
+        | lst -> truncPrimes @ (cands |> List.map buildPrimes |> List.collect id)
+
+    [2L;3L;5L;7L] |> List.map buildPrimes |> List.collect id |> List.sum
+
+module ``problem 38`` =
+    let digitCount (n : int64) = int (log10 (float n)) + 1
+    [ for x in 1L..99999L do
+         for y in 1L..((10L / int64 (digitCount x)) + 1L) do
+             yield [1L..y] |> List.map ((*) x) |> List.map string |> List.reduce (+) ]
+    |> List.filter (fun s -> s.Length = 9)
+    |> List.filter (fun s -> s.Contains("0") |> not)
+    |> List.filter (fun s -> s |> Seq.distinct |> Seq.length = 9)
+    |> List.max
+
+module ``problem 39`` =
+    let c x y = (pown x 2 + pown y 2) |> float |> sqrt
+    let cnt goal =
+        [ for x in 1. .. (goal / 3.) do
+            for y in x .. ((goal - x) / 2. + 1.) do
+                if (x + y + sqrt(x ** 2. + y ** 2.)) = goal then yield 1
+        ] |> List.length
+    [1. .. 1000. ] |> List.mapi (fun i c -> float i + 1., cnt c)
+    |> List.sortBy ((~-) << snd) |> List.head
+
+module ``problem 40`` =
+    let str = [1..200000] |> List.map string |> List.reduce (+)
+    str |> Seq.length
+
+    [1;10;100;1000;10000;100000;1000000] |> List.map (fun i -> int str.[i - 1] - int '0') |> List.reduce (*)
