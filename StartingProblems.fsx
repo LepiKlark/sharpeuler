@@ -10,7 +10,9 @@
                     | Some(factor) -> Some(factor,((factor, (rem/factor))))
                     | None -> Some(rem, (1L,1L) )) (2L,n) // this is a prime. Return it self and break.
 
-    let isPrime (n : int64) = primeFactors n |> Seq.length = 1
+    let isPrime (n : int64) = 
+        seq {2L..(int64 << sqrt << float <| n)} |> Seq.tryFind (fun d -> n % d = 0L) |> Option.isNone
+
     let rec gcd a b = if b = 0 then a else gcd b (a % b)
     let rec fact = function | 0L | 1L -> 1L | n -> n * fact(n-1L)
     let rec factbig (n : bigint) = 
@@ -427,7 +429,29 @@ module ``problem 39`` =
     |> List.sortBy ((~-) << snd) |> List.head
 
 module ``problem 40`` =
-    let str = [1..200000] |> List.map string |> List.reduce (+)
-    str |> Seq.length
-
+    let sb = System.Text.StringBuilder()
+    seq { 1 .. 200000 } |> Seq.iter (sb.Append >> ignore)
+    let str = sb.ToString()
     [1;10;100;1000;10000;100000;1000000] |> List.map (fun i -> int str.[i - 1] - int '0') |> List.reduce (*)
+
+module ``problem 41`` =
+    open Utility
+    let lstToInt64 (xs : list<int64>) = xs |> List.fold (fun s c -> s * 10L + c) 0L
+    
+    let rec search upper =
+        let r = [1L..upper] |> permute |> List.map lstToInt64 |> List.sortBy (~-) |> List.tryFind isPrime
+        match r with
+        | Some x -> x
+        | None   -> search (upper - 1L)
+
+    search 9L
+
+module ``problem 42`` =
+    let value (c : char) = int c - int 'A' + 1
+    let path = @"C:\Users\Aleksandar\Desktop\p042_words.txt"
+    let words = System.IO.File.ReadAllText path |> fun s -> s.Replace("\"", "").Replace("\n", "").Split(',')
+    let isTriangle n = ((-1. + (sqrt (1. + 8. * n))) / 2.) % 1. = 0.
+    words |> Seq.map (Seq.map value >> Seq.sum >> float) |> Seq.filter isTriangle |> Seq.length
+
+module ``problem 43`` =
+    [for x in 1..1000 -> x]
