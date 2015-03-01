@@ -525,10 +525,93 @@ module ``problem 49`` =
 
 module ``problem 50`` =
     open Utility
-    let primes = [1L..1000000L] |> List.filter isPrime
-    primes |> Seq.length
 
-    let traverse window =
-        primes |> Seq.windowed window |> Seq.map (Array.sum) |> Seq.filter isPrime |> Seq.head
+    let primes = [1L..100000L] |> List.filter isPrime
+    let chain l = primes |> Seq.windowed l |> Seq.map (Array.sum) |> Seq.tryFind isPrime
 
-    traverse 100
+    [|1..1000|] |> Array.Parallel.map (fun l -> chain l)
+    |> Array.choose id |> Array.filter (fun c -> c < 1000000L) |> Seq.last
+
+module ``problem 51`` =
+    open Utility
+
+    let primes = [99999L..999999L] |> List.filter isPrime |> List.map int |> List.map (digits >> Seq.toArray)
+
+    [for perm in (comb 3 [0..5]) do
+        let max = 
+            [for digitArray in primes do
+              if perm |> List.map (fun i -> digitArray.[i]) |> Seq.distinct |> Seq.length = 1 then // all fixed digits are same
+                  yield digitArray |> Array.mapi (fun i c -> i,c) |> Array.filter (fun (p,c) -> List.exists ((=) p) perm |> not) |> Array.map snd]
+            |> Seq.countBy id |> Seq.maxBy snd
+        yield (perm,max)] |> List.maxBy (fun (_, (_, c)) -> c)
+
+    //val it : int list * (int [] * int) = ([0; 2; 4], ([|2; 3; 3|], 8)) -> 
+
+module ``problem 52`` =
+    open Utility
+    
+    let sortedDigits x = x |> digits |> Seq.sort |> Seq.toArray
+
+    [123456..(999999/6)] |> List.tryFind (
+        fun x -> 
+            let x1 = sortedDigits x
+            let x2 = sortedDigits (2*x)
+            let x3 = sortedDigits (3*x)
+            let x4 = sortedDigits (4*x)
+            let x5 = sortedDigits (5*x)
+            let x6 = sortedDigits (6*x)
+
+            x1 = x2 && x3 = x4 && x5 = x6 && x2 = x3 && x4 = x5
+        )
+
+module ``problem 53`` =
+    open Utility
+    let comb n r = (factbig n) / ((factbig r) * (factbig (n-r)))
+    [for n in 1..100 do for r in 1..n -> comb (bigint n) (bigint r)] 
+    |> List.filter (fun n -> n > bigint 1000000) |> Seq.length
+
+module ``problem 54`` =
+    type Suit = Club | Diamond | Spade | Heart
+    type Card = int * Suit
+    type Hand = Card list
+    type HandScoreWithSortedCards = int * list<int> * list<int>
+
+    exception InvalidCardParsing
+
+    let text = System.IO.File.ReadAllLines @"C:\Users\atomic\Desktop\p054_poker.txt"
+    let parseLine (line : string) : Hand * Hand =
+        let cards = line.Split(' ') |> Array.map (fun s -> 
+                        let suit = match s.[1] with
+                                   | 'C' -> Club | 'S' -> Spade | 'D' -> Diamond | 'H' -> Heart
+                                   | _ -> raise InvalidCardParsing                    
+                        let rank = match s.[0] with
+                                   | '2' -> 2 | '3' -> 3 | '4' -> 4 | '5' -> 5 | '6' -> 6
+                                   | '7' -> 7 | '8' -> 8 | '9' -> 9 | 'T' -> 10 | 'J' -> 11 | 'Q' -> 12
+                                   | 'K' -> 13 | 'A' -> 14 | _ -> raise InvalidCardParsing
+                        rank, suit)
+        (cards |> Seq.take 5 |> Seq.toList), (cards |> Seq.skip 5 |> Seq.toList)
+    
+    let rec isConsecutive = function 
+    | a::b::lst when a <> b - 1 -> false
+    | a::b::lst when a = b - 1 -> true
+    | [_] | []  -> true
+
+    let parseHand (h : Hand) : HandScoreWithSortedCards =
+        let sorted = h |> List.sortBy (fst >> (~-)) |> List.map fst
+        let areSuiteSame = h |> List.map snd |> Seq.distinct |> Seq.length = 1
+        let areRanksConsecutive = isConsecutive << List.rev <| sorted
+        let groups = h |> Seq.countBy fst |> Seq.sortBy (snd >> (~-)) |> Seq.toList
+        let smallest = sorted |> Seq.last
+        (match groups with
+        | _ when areSuiteSame && areRanksConsecutive && smallest = 10 -> 8,[]
+        | _ when areSuiteSame && areRanksConsecutive -> 7,[]
+        | (x, 4)::(y,1)::[] -> 6,[x]
+        | (x, 3)::(y,2)::[] -> 5,[x;y]
+        | _ when areSuiteSame -> 4,[]
+        | _ when areRanksConsecutive -> 3,[]
+        | (x,3)::_ -> 2,[x]
+        | (x,2)::(y,2)::_::[] -> 1,([x;y] |> List.sortBy (~-))
+        | (x,2)::_ -> 0,[x]
+        | _ -> -1,[]) |> fun (a,b) -> a,b,sorted
+
+    text |> Array.map parseLine |> Array.filter (fun (h1, h2) -> parseHand h1 > parseHand h2) |> Array.length
