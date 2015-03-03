@@ -546,5 +546,3 @@ module ``problem 54`` =
         | _ -> -1,[]) |> fun (a,b) -> a,b,sorted
 
     text |> Array.map parseLine |> Array.filter (fun (h1, h2) -> parseHand h1 > parseHand h2) |> Array.length
-
-    
