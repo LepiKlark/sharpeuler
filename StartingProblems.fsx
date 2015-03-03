@@ -453,6 +453,75 @@ module ``problem 42`` =
     let isTriangle n = ((-1. + (sqrt (1. + 8. * n))) / 2.) % 1. = 0.
     words |> Seq.map (Seq.map value >> Seq.sum >> float) |> Seq.filter isTriangle |> Seq.length
 
+module ``problem 43`` =
+    let divs = [2;3;5;7;11;13;17]
+    let split (s : Set<int>) = [ for x in s -> x, (Set.remove x s) ]
+
+    let rec build curr divs numoptions : (list<list<int>>)=
+        match curr with
+        | [] | [_] | [_;_]  ->
+            [ for x, rem in (split numoptions) ->
+                build (x::curr) divs rem ] |> List.collect id
+        | a::b::lst -> 
+            match divs with
+            | [] -> [curr |> List.rev]
+            | div::divs -> 
+                [ for x, rem in (split numoptions |> List.filter (fun (x, _) -> (a * 10 + b * 100 + x) % div = 0)) ->
+                    build (x::curr) divs rem ] |> List.collect id
+    build [] divs ([0..9] |> Set.ofList)
+    |> List.map (List.map string) |> List.map (List.reduce (+))
+    |> List.map (System.Int64.Parse) |> List.sum
+
+module ``problem 44`` =
+    let s = Seq.initInfinite (fun i -> i * (3 * i - 1) / 2) |> Seq.skip 1
+    let isPand x = (0.5 + sqrt (0.25 + 6. * (float x))) / 3. % 1. = 0.
+
+    let search = s |> Seq.take 3000 |> Seq.toArray
+
+    [ for x in search do
+        for y in search do
+            if isPand (x + y) && isPand (x - y) then yield x,y ]
+       
+module ``problem 45`` =
+    let isPand x = (0.5 + sqrt (0.25 + 6. * (float x))) / 3. % 1. = 0.
+    let isTriangle x = (-0.5 + sqrt(0.25 + 2. * (float x))) % 1. = 0.
+    Seq.initInfinite (fun i -> i * (2 * i - 1)) |> Seq.skip 1
+    |> Seq.where (fun i -> isTriangle i && isPand i)
+    |> Seq.take 3
+
+module ``problem 46`` =
+    open Utility
+    let primes = [1L..1000000L] |> List.filter isPrime
+    let isGold x =
+        primes |> Seq.takeWhile (fun p -> p < x)
+        |> Seq.tryFind (fun p -> sqrt (float (x - p) / 2.) % 1. = 0.) |> Option.isSome
+    [1L..1000000L] |> List.filter (isPrime >> not) |> List.filter (fun n -> n % 2L = 1L)
+    |> Seq.tryFind (isGold >> not)
+
+module ``problem 47`` =
+    open Utility
+    Seq.initInfinite (fun i -> int64 i + 1L) 
+    |> Seq.windowed 4 
+    |> Seq.find (fun arr -> arr |> Array.forall (primeFactors >> Seq.distinct >> Seq.length >> ((=) 4)))
+
+module ``problem 48`` =
+    [1..1000] |> List.map (fun i -> bigint.Pow ((bigint i), i)) |> List.sum
+    |> string |> Seq.toList |> List.rev |> Seq.take 10
+    |> Seq.toList |> List.rev |> List.map string |> Seq.reduce (+)
+
+module ``problem 49`` =
+    open Utility
+    let isPermutation a b =
+        (digits a |> Seq.sort |> Seq.toList) = (digits b |> Seq.sort |> Seq.toList)
+    let primes = [1000L..9999L] |> List.filter isPrime |> List.map int
+
+    [for x in primes do
+        for y in primes do
+            for z in primes do
+                if (x < y && y < z) then
+                    if (y - x = z - y) then
+                        if isPermutation x y && isPermutation y z then
+                            yield x, y, z]
 
 module ``problem 50`` =
     open Utility
