@@ -615,3 +615,19 @@ module ``problem 54`` =
         | _ -> -1,[]) |> fun (a,b) -> a,b,sorted
 
     text |> Array.map parseLine |> Array.filter (fun (h1, h2) -> parseHand h1 > parseHand h2) |> Array.length
+
+module ``problem 55`` =
+    let rev n = string n |> Seq.toArray |> Array.rev |> Array.map string |> Array.reduce (+) |> bigint.Parse
+    let isPalindrome n = n = rev n
+    let isLychrel n =
+        let rec isLychrelI n i =
+            if i > 50 then true
+            elif isPalindrome n then false
+            else isLychrelI (n + rev n) (i + 1)
+        isLychrelI (n + rev n) 0
+
+    [1..10000] |> List.map (fun c -> bigint c) |> List.filter isLychrel |> List.length
+
+module ``problem 56`` =
+    [for a in 80..99 do for b in 80..99 -> bigint.Pow ((bigint a),b) ] |> List.map (fun n -> n |> string |> Seq.map (fun c -> int c - int '0') |> Seq.sum) |> Seq.max
+            
