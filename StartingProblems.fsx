@@ -10,8 +10,20 @@
                     | Some(factor) -> Some(factor,((factor, (rem/factor))))
                     | None -> Some(rem, (1L,1L) )) (2L,n) // this is a prime. Return it self and break.
 
-    let isPrime (n : int64) = 
-        seq {2L..(int64 << sqrt << float <| n)} |> Seq.tryFind (fun d -> n % d = 0L) |> Option.isNone
+    let isPrime n =
+        match n with
+        | _ when n > 3L && (n % 2L = 0L || n % 3L = 0L) -> false
+        | _ ->
+            let maxDiv = int64(System.Math.Sqrt(float n)) + 1L
+            let rec f d i = 
+                if d > maxDiv then 
+                    true
+                else
+                    if n % d = 0L then 
+                        false
+                    else
+                        f (d + i) (6L - i)     
+            f 5L 2L
 
     let rec gcd a b = if b = 0 then a else gcd b (a % b)
     let rec fact = function | 0L | 1L -> 1L | n -> n * fact(n-1L)
@@ -615,3 +627,86 @@ module ``problem 54`` =
         | _ -> -1,[]) |> fun (a,b) -> a,b,sorted
 
     text |> Array.map parseLine |> Array.filter (fun (h1, h2) -> parseHand h1 > parseHand h2) |> Array.length
+
+module ``Problem 57`` =
+    let rec calc iter nom denom =                
+        if iter = 0 then nom + denom, denom
+        else calc (iter - 1) denom (nom + (bigint 2) * denom)
+
+    [for x in 2..998 do yield calc x (bigint 2) (bigint 5)]
+    |> List.filter(fun (n,d) -> n.ToString().Length > d.ToString().Length)
+    |> List.length
+
+module ``Problem 58`` =
+    open Utility
+    let gendiag n = (Seq.init 4 (fun j -> Seq.init n (fun i -> pown (1 + i * 2) 2 - i * 2 * j)) |> Seq.collect id)
+    let gendiagside sidel = gendiag (sidel / 2 + 1) |> Seq.toArray |> Array.filter ((<>) 1)
+    
+    let ratio diag =
+        let s = gendiagside diag
+        let p = s |> Array.filter (int64 >> isPrime)
+        float (Array.length p) / float (Array.length s + 1)
+    
+    [ for x in 7..10000 do if x % 2 = 1 then yield x]
+    |> Seq.takeWhile (fun i -> ratio i > 0.1)
+    |> Seq.last
+
+    [ for x in 30000..30002 do if x % 2 = 1 then yield x]
+    |> Seq.map (fun i -> ratio i) |> Seq.last
+
+    let rec binary s e f l (lookup : int array) =
+        let d = (s + e) / 2
+        if s = e then 
+            s, e, (f d)
+        elif f lookup.[d] > l then 
+            printfn "found %f for %i" (f lookup.[d]) lookup.[d]
+            binary d e f l lookup 
+        else 
+            printfn "found %f for %i" (f lookup.[d]) lookup.[d]
+            binary s d f l lookup
+
+    let lookup = [| for x in 20000..30002 do if x % 2 = 1 then yield x|]
+    binary 0 (Array.length lookup - 1) ratio 0.1 lookup 
+    // 26241
+
+module ``problem 59`` =
+    let path = @"C:\Users\Aleksandar\Desktop\p059_cipher.txt"
+    let content = 
+        System.IO.File.ReadAllText(path).Split(',')
+        |> Array.map (System.Int32.Parse >> char)
+
+    let decode (pass : char array) =
+        let passLength = Seq.length pass
+        content 
+        |> Array.mapi (fun i l -> int l ^^^ (int pass.[i % passLength]) |> char)
+
+    let passCombinations =
+        [for x in 'a'..'z' do for y in 'a'..'z' do for z in 'a'..'z' do yield [|x;y;z|]]
+
+    let decodes = [for pass in passCombinations do yield decode pass]
+
+    let code = 
+        decodes
+        |> List.map (fun decode -> decode, decode |> Seq.where ((=) 'e') |> Seq.length)
+        |> Seq.sortBy (snd >> (~-) )// number of 'and'
+        |> Seq.nth 1
+
+    code |> fst |> Seq.map int |> Seq.sum
+    // seconds is the answer.
+
+module ``problem 60`` =
+    open Utility
+    let fastConcat x y = x * (int64 <| pown 10 (int (log10 (float y)) + 1)) + y
+    let isConcatPrime a b = isPrime (fastConcat a b) && isPrime (fastConcat b a)    
+
+    let primes = [3L..10000L] |> List.filter isPrime
+
+    let rec calc combs l =
+        if l = 5 then combs
+        else
+            calc [for c in combs do 
+                    for p in primes do
+                        if p > List.head c &&
+                           c |> List.forall (isConcatPrime p) then yield p::c] (l + 1)
+    calc (primes |> List.map (fun e -> [e])) 1
+    // [[8389L; 6733L; 5701L; 5197L; 13L]] (50s....)
