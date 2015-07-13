@@ -727,5 +727,31 @@ module ``problem 60`` =
     calc (primes |> List.map (fun e -> [e])) 1
     // [[8389L; 6733L; 5701L; 5197L; 13L]] (50s....)
 
-
+module ``problem 61`` =
+    open Utility
+    let numbers = 
+        [   fun n -> n * (n + 1) / 2
+            fun n -> n * n
+            fun n -> n * (3 * n - 1) / 2
+            fun n -> n * (2 * n - 1)
+            fun n -> n * (5 * n - 3) / 2
+            fun n -> n * (3 * n - 2) 
+        ] |> List.map (fun fn -> [10..200] |> List.map fn |> List.filter (fun n -> n >= 1000 && n <= 9999))
+    
+    let isPossible prev next = prev % 100 = next / 100
+    let rec build families hist =
+        match families, hist with
+        | [], _ -> [hist |> List.rev]
+        | curr::tail, [] -> 
+            [for e in curr -> build tail (e::hist)] |> List.collect id
+        | curr::tail, hist ->
+            let last = List.head hist
+            [for e in curr |> List.filter (fun e -> isPossible e last) -> build tail (e::hist)] 
+            |> List.collect id
             
+    (List.tail numbers |> permute |> List.map (fun t -> (List.head numbers)::t)) |> Array.ofList
+    |> Array.Parallel.map (fun f -> build f [])
+    |> List.ofArray
+    |> List.collect id
+    |> List.filter (fun ls ->
+        isPossible (List.head ls) (List.head (List.rev ls))) |> List.map (List.sum)          
