@@ -755,3 +755,14 @@ module ``problem 61`` =
     |> List.collect id
     |> List.filter (fun ls ->
         isPossible (List.head ls) (List.head (List.rev ls))) |> List.map (List.sum)          
+
+module ``problem 62`` =
+    let hash (n : int64) =
+        let rec hashInternal = function | 0L -> [] | n -> (n % 10L)::(hashInternal (n/10L))
+        let list = hashInternal n |> List.sort
+        List.foldBack (fun c s -> s * 10L + c) list 0L
+    let cube (n : int64) = n * n * n
+    [100L..30000L] |> List.map (fun n -> n, n |> cube |> hash)
+    |> Seq.groupBy snd |> Seq.map (fun (n, g) -> n, g |> Seq.map fst, g |> Seq.length)
+    |> Seq.where (fun (_, _, l) -> l = 5)
+    |> Seq.head |> fun (_, n, _) -> n |> Seq.head
