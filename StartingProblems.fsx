@@ -768,8 +768,112 @@ module ``problem 62`` =
     |> Seq.head |> fun (_, n, _) -> n |> Seq.head
 
 module ``problem 63`` =
+<<<<<<< HEAD
     [for b in 1 .. 9 do
         for p in 1 .. 30 do
             let t = log10(float(b))
             if System.Math.Floor((float p) * t + 1.) |> int = p then
                 yield b,p ] |> List.length
+=======
+    let genFractions (num : int)=
+        let sqrtW = int << floor << sqrt << float
+        let a0 = sqrtW num
+        let c = 1
+        let b = a0
+
+        let rec genSeq b c history =
+            let alfaB = num - b * b
+            let gcd = Utility.gcd alfaB c
+            let alfaBGcd = alfaB / gcd
+            let cgcd = c / gcd
+            let a = (a0 + b) / alfaBGcd
+            let c = alfaBGcd
+            let b = a * alfaBGcd - b
+            if List.exists ((=) (b,c)) history then 0
+            else 1 + genSeq b c ((b,c)::history)
+
+        genSeq b c []
+
+    let rationalRoots = [1..100] |> List.map (fun i -> i * i)
+    let irrationalRoots = [1..10000] |> List.filter (fun i -> rationalRoots |> List.exists (fun r -> i = r) |> not)
+
+    irrationalRoots |> List.map genFractions |> List.filter (fun i -> i % 2 = 1) |> List.length
+
+module ``problem 64`` =
+    let fn c (p1,p2) = c * p2 + p1, p2
+
+    let rec conv (a : int list) (p1 : bigint) (p2 : bigint) =
+        match a with
+        | ah::at -> 
+            let p11, p21 = fn (bigint ah) (p1, p2)
+            conv at p21 p11
+        | [] -> p2 + p1, p2
+
+    let lst = 1::2::(List.init 97 (fun i -> match (i % 3) with | 0 | 1 -> 1 | 2 -> (i + 1) / 3 * 2 + 2))
+    let _, b = conv lst (bigint 1) (bigint 2)
+
+    b |> string |> Seq.map (fun n -> int n - int '0') |> Seq.sum
+
+module ``problem 65`` =
+    let genFractions (num : int)=
+        let sqrtW = int << floor << sqrt << float
+        let a0 = sqrtW num
+        let c = 1
+        let b = a0
+
+        let rec genSeq b c history =
+            let alfaB = num - b * b
+            let gcd = Utility.gcd alfaB c
+            let alfaBGcd = alfaB / gcd
+            let cgcd = c / gcd
+            let a = (a0 + b) / alfaBGcd
+            let c = alfaBGcd
+            let b = a * alfaBGcd - b
+            if List.exists ((=) (b,c)) history then []
+            else (a,b,c)::genSeq b c ((b,c)::history)
+
+        genSeq b c []
+    
+    let rec pn (cf:bigint list) i ``p(i-1)`` ``p(i-2)`` =
+        match i, cf with
+        | 0L, a0::cf -> a0::(pn cf (i+1L) a0 (bigint(0L)))
+        | 1L, a1::cf -> 
+            let succ = ``p(i-1)`` * a1 + bigint(1L)
+            succ::(pn cf (i+1L) succ ``p(i-1)``)
+        | n, h::cf -> 
+            let succ = ``p(i-1)`` * h + ``p(i-2)``
+            succ::(pn cf (i+1L) succ ``p(i-1)``)
+        | n, [] -> []
+
+    let rec qn cf i ``p(i-1)`` ``p(i-2)`` =
+        match i, cf with
+        | n, [] -> []
+        | 0L, _ -> bigint.One::(qn cf (i+1L) bigint.One bigint.Zero)
+        | 1L, a0::a1::cf -> 
+            a1::(qn cf (i+1L) a1 ``p(i-1)``)
+        | n, an::cf -> 
+            let succ = ``p(i-1)`` * an + ``p(i-2)``
+            succ::(qn cf (i+1L) succ ``p(i-1)``)
+
+    let solve D =
+        let fractions = genFractions D |> List.map (fun (x,_,_) -> bigint x)
+        let a0 = D |> float |> sqrt |> int
+        if a0 % 2 = 1 then
+            let ps = pn ((bigint a0)::(fractions@fractions)) 0L bigint.Zero bigint.Zero
+            let qs = qn ((bigint a0)::(fractions@fractions)) 0L bigint.Zero bigint.Zero
+            ps |> List.rev |> Seq.nth 1, qs |> List.rev |> Seq.nth 1
+        else
+            let ps = pn ((bigint a0)::fractions) 0L bigint.Zero bigint.Zero            
+            let qs =  qn ((bigint a0)::fractions) 0L bigint.Zero bigint.Zero
+            ps |> List.rev |> Seq.nth 1, qs |> List.rev |> Seq.nth 1
+
+    let D = 13
+
+    let squares = [1..40] |> List.map (fun i -> i * i) |> Set.ofList
+    (([990..1000] |> Set.ofList) - squares) |> Set.toList |> List.map (fun D -> solve D, D) |> List.sortBy (fst >> fst >> (~-)) |> Seq.take 5
+
+    let x = bigint.Parse("288065397114519999215772221121510725946342952839946398732799")
+    let y = bigint.Parse("9150698914859994783783151874415159820056535806397752666720")
+    let D = bigint(991)
+    x * x - y * y * D
+>>>>>>> origin/master
