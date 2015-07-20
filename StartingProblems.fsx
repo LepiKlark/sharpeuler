@@ -768,13 +768,13 @@ module ``problem 62`` =
     |> Seq.head |> fun (_, n, _) -> n |> Seq.head
 
 module ``problem 63`` =
-<<<<<<< HEAD
+
     [for b in 1 .. 9 do
         for p in 1 .. 30 do
             let t = log10(float(b))
             if System.Math.Floor((float p) * t + 1.) |> int = p then
                 yield b,p ] |> List.length
-=======
+
     let genFractions (num : int)=
         let sqrtW = int << floor << sqrt << float
         let a0 = sqrtW num
@@ -871,9 +871,3 @@ module ``problem 65`` =
 
     let squares = [1..40] |> List.map (fun i -> i * i) |> Set.ofList
     (([990..1000] |> Set.ofList) - squares) |> Set.toList |> List.map (fun D -> solve D, D) |> List.sortBy (fst >> fst >> (~-)) |> Seq.take 5
-
-    let x = bigint.Parse("288065397114519999215772221121510725946342952839946398732799")
-    let y = bigint.Parse("9150698914859994783783151874415159820056535806397752666720")
-    let D = bigint(991)
-    x * x - y * y * D
->>>>>>> origin/master
