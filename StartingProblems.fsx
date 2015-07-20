@@ -766,3 +766,10 @@ module ``problem 62`` =
     |> Seq.groupBy snd |> Seq.map (fun (n, g) -> n, g |> Seq.map fst, g |> Seq.length)
     |> Seq.where (fun (_, _, l) -> l = 5)
     |> Seq.head |> fun (_, n, _) -> n |> Seq.head
+
+module ``problem 63`` =
+    [for b in 1 .. 9 do
+        for p in 1 .. 30 do
+            let t = log10(float(b))
+            if System.Math.Floor((float p) * t + 1.) |> int = p then
+                yield b,p ] |> List.length
