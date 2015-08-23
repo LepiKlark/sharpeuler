@@ -865,7 +865,86 @@ module ``problem 65`` =
     let squares = [1..40] |> List.map (fun i -> i * i) |> Set.ofList
     (([990..1000] |> Set.ofList) - squares) |> Set.toList |> List.map (fun D -> solve D, D) |> List.sortBy (fst >> fst >> (~-)) |> Seq.take 5
 
-    let x = bigint.Parse("288065397114519999215772221121510725946342952839946398732799")
-    let y = bigint.Parse("9150698914859994783783151874415159820056535806397752666720")
-    let D = bigint(991)
-    x * x - y * y * D
+module ``problem 68`` =
+    let inds = [[0;5;6];[1;6;7];[2;7;8];[3;8;9];[4;9;5]]
+    let state : option<int> [] = Array.init 10 (fun _ -> None)
+
+    let check () =
+        [for ind in inds do
+            let states = [for i in ind do yield state.[i]]
+            if states |> List.forall(Option.isSome) |> not then yield None
+            else yield states |> List.choose id |> List.sum |> Some 
+        ] |> List.choose id |> Seq.distinct |> Seq.length = 1
+
+    let rec fill pos input = 
+        [if Set.isEmpty input then yield state |> Array.choose id
+         else              
+            for i in input do
+                state.[pos] <- Some i 
+                if pos < 7 || check() then
+                    yield! fill (pos + 1) (input.Remove i)
+                state.[pos] <- None]
+                
+    let sol = fill 0 ([1..10] |> Set.ofList)
+    let toPrint (arr : int []) = [for ind in inds do for i in ind do yield arr.[i]]
+    sol |> List.map toPrint |> List.filter (fun arr -> arr.[0] < arr.[3] && arr.[0] < arr.[6] && arr.[0] < arr.[9] && arr.[0] < arr.[12])
+    |> List.map (fun arr -> arr |> List.fold (fun s e -> s + e.ToString()) "")
+
+    //6531031914842725
+
+module ``problem 69`` =
+    ()
+    // Solved by hand.
+
+module ``problem 70`` =
+    open Utility 
+
+    let primes = [2L..10000000L] |> List.filter isPrime 
+    let rec factorize n primeList =
+        let rec reduce n p =
+            match n % p with
+            | 0L -> reduce (n/p) p
+            | _ -> n
+        
+        match primeList with
+        | h::t when h > (n |> float |> sqrt |> int64) -> 
+            if isPrime n && n <> 1L then [n] else []
+        | h::t when n % h = 0L ->
+            h::(factorize (reduce n h) t)
+        | h::t when n % h <> 0L ->
+            factorize n t
+        | [] -> failwith "Not enough primes provided!"
+        | _ -> failwith "No clue what is going on!"
+
+    let phi n =
+        let facts = factorize n primes
+        let multuple (a1, b1) (a2, b2) = (a1 * a2, b1 * b2)
+        let rec calc facts =
+            match facts with
+            | h::t -> multuple ((h-1L), h) (calc t)
+            | [] -> 1L, 1L
+        let num, denum = calc facts      
+        n * num / denum
+
+    let isPermutation a b =
+        (digits a |> Seq.sort |> Seq.toList) = (digits b |> Seq.sort |> Seq.toList)
+
+    let phis = 
+        [|1L..10000000L|] 
+        |> Array.Parallel.map (fun n -> n ,phi n) 
+        |> Array.Parallel.choose(fun (n, phi) -> if isPermutation (int n) (int phi) then Some(n, phi) else None)
+        |> Seq.skip 1
+        |> Seq.minBy (fun (a,b) -> (float a) / (float b))
+    
+module ``problem 71`` =
+    let check a =   
+        if (7 * a + 1) % 3 = 0 then Some ((7 * a + 1) / 3)
+        else None
+    let max = 1000000
+    let rec findFirst curr =
+        match check curr with
+        | Some b -> 
+            if b <= max then curr, b
+            else findFirst (curr - 1)
+        | None -> findFirst (curr - 1)
+    findFirst max
