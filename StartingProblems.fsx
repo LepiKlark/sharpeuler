@@ -955,3 +955,20 @@ module ``problem 71`` =
             else findFirst (curr - 1)
         | None -> findFirst (curr - 1)
     findFirst max
+
+module ``problem 72`` =
+    open ``problem 70``    
+    [2L..1000000L] |> List.map phi |> List.sum
+
+module ``problem 73`` =
+    let rec gcd a b = if b = 0 then a else gcd b (a % b)
+    let rec search n d s =
+        if d > 12000 then s
+        elif n = d then search 1 (d + 1) s
+        elif 6 * n >= 3 * d then search 1 (d + 1) s
+        elif 2 * d < 6 * n && gcd d n = 1 then search (n + 1) d (s + 1)
+        else search (n + 1) d s
+
+    search 1 2 0
+                    
+                
