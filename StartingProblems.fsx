@@ -768,6 +768,13 @@ module ``problem 62`` =
     |> Seq.head |> fun (_, n, _) -> n |> Seq.head
 
 module ``problem 63`` =
+
+    [for b in 1 .. 9 do
+        for p in 1 .. 30 do
+            let t = log10(float(b))
+            if System.Math.Floor((float p) * t + 1.) |> int = p then
+                yield b,p ] |> List.length
+
     let genFractions (num : int)=
         let sqrtW = int << floor << sqrt << float
         let a0 = sqrtW num
