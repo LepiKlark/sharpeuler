@@ -963,7 +963,7 @@ module ``problem 72`` =
 module ``problem 73`` =
     let rec gcd a b = if b = 0 then a else gcd b (a % b)
     let rec search n d s =
-        if d > 12000 then s
+        if d > 100000 then s
         elif n = d then search 1 (d + 1) s
         elif 6 * n >= 3 * d then search 1 (d + 1) s
         elif 2 * d < 6 * n && gcd d n = 1 then search (n + 1) d (s + 1)
@@ -971,4 +971,41 @@ module ``problem 73`` =
 
     search 1 2 0
                     
-                
+module ``problem 74`` =
+    open Utility
+    
+    let facts = [|0L..9L|] |> Array.map fact
+
+    let rec toDigits n =
+        [
+            match n with
+            | 0L -> ()
+            | n -> yield n%10L; yield! toDigits (n / 10L)
+        ]
+    
+    let factDigits n = toDigits n |> List.map (fun n -> facts.[int n]) |> List.sum
+
+    let measureLoop num =
+        let rec measureLoopI n hist =
+            if List.exists ((=) n) hist then 1
+            else 1 + (measureLoopI (factDigits n) (n::hist))
+        measureLoopI (factDigits num) []
+    
+    [|1L..(1000000L-1L)|] |> Array.Parallel.map measureLoop
+    |> Array.filter ((=) 60) |> Array.length
+
+module ``problem 75`` =
+    open Utility
+
+    let g = 1500000
+    [for n in 1..1000 do
+        for m in (n+1)..1000 do
+            if gcd m n  = 1 && (m-n) % 2 = 1 then
+                let a,b,c = m * m - n * n, 2 * m * n, m * m + n * n
+                for k in 1..(g / (a + b + c) + 1) do
+                    yield k * a, k * b, k * c]
+    |> List.map (fun (a,b,c) -> a + b + c)
+    |> List.filter (fun s -> s <= g) 
+    |> Seq.groupBy id
+    |> Seq.filter (fun (_, s) -> Seq.length s = 1)
+    |> Seq.length
