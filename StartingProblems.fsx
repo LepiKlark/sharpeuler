@@ -1009,3 +1009,174 @@ module ``problem 75`` =
     |> Seq.groupBy id
     |> Seq.filter (fun (_, s) -> Seq.length s = 1)
     |> Seq.length
+
+module ``problem 76`` =
+    let P : Option<int> [] = Array.init 200 (fun _ -> None)
+
+    let rec euler_recurrence n =
+        if n < 0 then 0
+        elif n = 1 then 1
+        elif (Option.isSome P.[n]) then P.[n].Value
+        else
+            let pn =
+                [
+                    for k in 1..n do
+                        let n1 = n - k * (3 * k - 1) / 2
+                        let n2 = n - k * (3 * k + 1) / 2
+                        let p1 = euler_recurrence n1
+                        let p2 = euler_recurrence n2
+
+                        yield (if k % 2 = 1 then 1 else -1) * (p1 + p2)
+                ] |> List.sum
+            P.[n] <- Some pn
+            pn
+
+    (euler_recurrence 101) - 1
+
+module ``problem 77`` =
+    open Utility
+
+    let primes = [1L..500L] |> List.filter isPrime |> List.map int |> Seq.skip 1 |> Seq.toList
+
+    let rec sumup l g t =
+        if t = g then 1
+        elif l = [] then 0
+        elif t > g then 0
+        else
+            let rec loopList (lst : list<int>) =
+                let head,tail = lst.Head, lst.Tail
+                (sumup lst g (t + head)) + (sumup tail g t)
+            loopList l
+
+    sumup primes 71 0
+
+module ``problem 78`` =
+    let P : Option<bigint> [] = Array.init 100000 (fun _ -> None)
+
+    let rec euler_recurrence n =
+        if n < 0L then 0I
+        elif n = 1L then 1I
+        elif (Option.isSome P.[int n]) then P.[int n].Value
+        else
+            let pn =
+                [
+                    for k in 1L..((sqrt (float n) |> int64) + 10L) do
+                        if k <= n then
+                            let n1 = n - k * (3L * k - 1L) / 2L
+                            let n2 = n - k * (3L * k + 1L) / 2L
+                            let p1 =
+                                if n1 >= 0L then euler_recurrence n1 else 0I
+                            let p2 = if n2 >= 0L then euler_recurrence n2 else 0I
+                            
+                            if (k % 2L = 1L) then yield p1 + p2
+                            else                yield -p1 - p2
+                ] |> List.sum
+            P.[int n] <- Some pn
+            pn
+
+    [1L..700000L] |> List.tryFind(fun i -> (euler_recurrence i) % 1000000I = 0I) |> fun i -> i.Value - 1L
+
+module ``problem 80`` =
+    let MAX_DEPTH = 100
+    let rec computeRoot digits p c depth =
+        if depth = MAX_DEPTH then p
+        else
+            match digits with 
+            | f::s::rest ->
+                let c = c * 100I + f * 10I + s
+                if c = 0I then
+                    p
+                else
+                    let x, y = 
+                        [0I..9I] |> List.map(fun x -> x,  x * (20I * p + x)) |> List.where (fun (_, y) -> y <= c) |> Seq.last
+                    let p = p * 10I + x
+                    let c = c - y
+                    computeRoot rest p c (depth + 1)
+            | _ -> failwith "not enough values!"
+
+    [1..99]
+    |> List.map (fun n -> 
+        let f, s = n / 10 |> bigint, n % 10 |> bigint
+        (computeRoot ([f; s]@(List.init 1000 (fun _ -> 0I))) 0I 0I 0))
+    |> List.map (fun n -> n.ToString())
+    |> List.where (fun str -> str.Length > 10)
+    |> List.map (Seq.sumBy (fun c -> (int c) - (int '0')))
+    |> List.sum
+
+module ``problem 81`` =
+    let path = @"C:\users\atomic\desktop\euler81.txt"
+    let matrix = System.IO.File.ReadAllLines path |> Array.map (fun str -> str.Split(',') |> Array.map (System.Int32.Parse))
+    let min x y = if x < y then x else y
+
+    let mins : option<int> [,] = Array2D.init 80 80 (fun i j -> None)
+    let x1, y1 = 79, 79
+
+    let rec traverse pos =
+        let x, y = pos
+        if (x, y) = (x1, y1) then matrix.[x].[y]
+        else
+            match mins.[x,y] with
+            | Some hist -> hist
+            | None ->           
+                let down =
+                    if y < y1 then traverse (x, y + 1) else System.Int32.MaxValue
+                let left =
+                    if x < x1 then traverse (x + 1, y) else System.Int32.MaxValue
+                let v = (min down left) + matrix.[x].[y]
+                mins.[x, y] <- Some v
+                v
+
+    traverse (0, 0)
+
+module ``problem 82`` =
+    let path = @"C:\users\atomic\desktop\euler81.txt"
+    let matrix = System.IO.File.ReadAllLines path |> Array.map (fun str -> str.Split(',') |> Array.map (System.Int32.Parse))
+
+    let min x y z = 
+        if x < y then 
+            if x < z then x else z 
+        elif y < z then y else z
+
+    let x1, y1 = 79, 79
+
+    type Direction = Right | Up | Down
+
+    let rec traverse pos d (mins : option<int> [,,]) =
+        let x, y = pos
+        let prevPos = match d with | Right -> 0 | Up -> 1 | Down -> 2
+        if y = y1 then matrix.[x].[y]
+        else
+            match mins.[x,y, prevPos] with
+            | Some hist -> hist
+            | None ->           
+                let right = traverse (x, y + 1) Right mins
+                let down = if x < x1 && not (d = Up) then traverse (x + 1, y) Down mins else System.Int32.MaxValue
+                let up = if x > 0 && not (d = Down) then traverse (x - 1, y) Up mins else System.Int32.MaxValue
+                let v = (min down right up) + matrix.[x].[y]
+                mins.[x, y, prevPos] <- Some v
+                v
+
+    let mins : option<int> [,,] = Array3D.init 80 80 3 (fun i j z-> None)
+    [0..79] |> List.map (fun x -> traverse (x, 0) Right mins) |> List.min
+
+module ``problem 83`` =
+    let path = @"C:\users\atomic\desktop\euler81.txt"
+    let matrix = System.IO.File.ReadAllLines path |> Array.map (fun str -> str.Split(',') |> Array.map (System.Int32.Parse))
+    
+    let mins : int [,] = Array2D.init 80 80 (fun i j -> System.Int32.MaxValue)
+        
+    let rec traverse (x, y) x1 y1 sum =
+        let nSum = sum + matrix.[x].[y]        
+        if y = y1 && x = x1 then             
+            if nSum < mins.[x, y] then mins.[x,y] <- nSum
+        elif nSum >= mins.[x1, y1] then ()
+        elif mins.[x, y] <= nSum then ()
+        else
+            mins.[x, y] <- nSum                  
+            if y < y1   then traverse (x, y + 1) x1 y1 mins.[x, y]      
+            if x < x1   then traverse (x + 1, y) x1 y1 mins.[x, y]     
+            if x > 0    then traverse (x - 1, y) x1 y1 mins.[x, y]   
+            if y > 0    then traverse (x, y - 1) x1 y1 mins.[x, y]     
+
+    traverse (0, 0) 79 79 0
+    mins.[79, 79]
