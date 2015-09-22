@@ -41,3 +41,12 @@ $RECYCLE.BIN/
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# execs and dlls
+*.dll
+*.pdb
+bin/
+obj/
+*.suo
+UpgradeLog.htm
+SharEuler.v12.suo
